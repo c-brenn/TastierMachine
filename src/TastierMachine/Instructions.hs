@@ -29,6 +29,10 @@ data Instruction = Add
                  | Halt
                  | Dup
                  | Nop
+                 | Malloc
+                 | CalcAddress
+                 | StoreTop
+                 | LoadTop
                  deriving (Eq, Ord, Show, Enum)
 
 data InstructionWord = Nullary Instruction

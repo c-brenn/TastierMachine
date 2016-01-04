@@ -46,7 +46,7 @@ import System.IO.Unsafe (unsafePerformIO)
 import System.IO (hFlush, stdout)
 import Data.List (intersperse)
 
-debug' m@(Machine rpc rtp rbp imem _ _) = do {
+debug' m@(Machine rpc rtp rbp htp imem _ _) = do {
   putStrLn $
     concat $
       intersperse "\t| " $
@@ -64,6 +64,7 @@ debug = unsafePerformIO . debug'
 data Machine = Machine { rpc :: Int16,  -- ^ next instruction to execute
                          rtp :: Int16,  -- ^ top of the stack
                          rbp :: Int16,  -- ^ base of the stack
+                         htp :: Int16,  -- ^ top of the heap
 
                          imem :: (Array Int16 Instructions.InstructionWord),
                                                       -- ^ instruction memory
@@ -79,7 +80,7 @@ data Machine = Machine { rpc :: Int16,  -- ^ next instruction to execute
 
 run :: RWS [Int16] [String] Machine ()
 run = do
-  machine'@(Machine rpc rtp rbp imem dmem smem) <- get
+  machine'@(Machine rpc rtp rbp htp imem dmem smem) <- get
   let machine = machine'
   let instructionWord = imem ! rpc
 
@@ -193,7 +194,7 @@ run = do
 
         Instructions.Read   -> do
           value <- ask
-	  case value of
+          case value of
             (i:rest) -> do
               put $ machine { rpc = rpc + 1, rtp = rtp + 1,
                               smem = (smem // [(rtp, i)]) }
@@ -224,6 +225,44 @@ run = do
             the dynamic link, static link, and lexical level delta fields).
           -}
           put $ machine { rpc = rpc + 1, rtp = rbp+1, rbp = (smem ! (rbp+3)) }
+          run
+
+        Instructions.Malloc -> do
+          let size = smem ! (rtp - 1)
+          put $ machine { rpc = rpc + 1,
+                          htp = htp - (size + 1),
+                          dmem = (dmem // [(htp, size)]),
+                          smem = (smem // [(rtp -1, htp)])
+                        }
+          run
+
+        Instructions.CalcAddress -> do
+          let offset = smem ! (rtp - 1)
+          let baseAddress = smem ! (rtp -2)
+          let size = dmem ! baseAddress
+          case offset < size && offset >= 0 of
+            True -> do
+              put $ machine { rpc = rpc + 1,
+                              rtp = rtp - 1,
+                              smem = (smem // [(rtp - 2, baseAddress - offset - 1)])
+                            }
+              run
+            False -> error $ "Index out of bounds. Size: " ++ (show size) ++ " " ++ " index given: " ++ show offset
+
+        Instructions.StoreTop -> do
+          let value = smem ! (rtp - 1)
+          let address = smem ! (rtp - 2)
+          put $ machine { rpc = rpc + 1,
+                          rtp = rtp - 1,
+                          dmem = (dmem // [(address, value)])
+                        }
+          run
+
+        Instructions.LoadTop -> do
+          let address = smem ! (rtp - 1)
+          put $ machine { rpc = rpc + 1,
+                          smem = (smem // [(rtp -1, (dmem ! address))])
+                        }
           run
 
     Instructions.Unary i a ->

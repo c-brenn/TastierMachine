@@ -32,6 +32,10 @@ parseInstruction lineNumber text =
     ["Leq"]         -> Right $ I.Nullary I.Leq
     ["Geq"]         -> Right $ I.Nullary I.Geq
     ["Neg"]         -> Right $ I.Nullary I.Neg
+    ["Malloc"]      -> Right $ I.Nullary I.Malloc
+    ["CalcAddress"] -> Right $ I.Nullary I.CalcAddress
+    ["StoreTop"]    -> Right $ I.Nullary I.StoreTop
+    ["LoadTop"]     -> Right $ I.Nullary I.LoadTop
     ["Load", a, b]  ->
       let a' = B.readInteger a
           b' = B.readInteger b
@@ -138,7 +142,7 @@ parse = do
   if lineNumber > length sourceCode then return ()
   else do
     let currentLine = sourceCode !! (lineNumber-1)
-    let mightBeLabelText = B.takeWhile isAlphaNumOrDollar currentLine
+    let mightBeLabelText = B.takeWhile isAcceptableLabel currentLine
     let restOfLine = B.drop (B.length mightBeLabelText) currentLine
 
     if ((B.length mightBeLabelText) > 0) then --could be a label
@@ -166,7 +170,7 @@ parse = do
       RWS.tell $ [parseInstruction instNumber currentLine]
       parse
   where
-    isAlphaNumOrDollar a = (a == '$' || isAlphaNum a)
+    isAcceptableLabel a = (a == '$' || a =='_' || isAlphaNum a)
 
 {-
   patchLabelAddresses takes the symbol table containing all labels defined in

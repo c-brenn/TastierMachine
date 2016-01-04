@@ -12,7 +12,7 @@ import Control.Monad.RWS.Lazy (execRWS)
 import System.Environment (getArgs)
 import Data.Maybe (fromJust)
 
-machine = (Machine.Machine 0 0 0
+machine = (Machine.Machine 0 0 0 4091
           (listArray (0,0) [Instructions.Nullary Instructions.Halt])
           (listArray (0,4091) (take 4092 $ cycle [0]))
           (listArray (0,4095) (take 4096 $ cycle [0])))
