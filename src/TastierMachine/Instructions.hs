@@ -27,6 +27,7 @@ data Instruction = Add
                  | Read
                  | Write
                  | WriteChar
+                 | WriteStr
                  | Halt
                  | Dup
                  | Nop

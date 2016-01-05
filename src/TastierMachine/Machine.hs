@@ -211,6 +211,20 @@ run = do
           put $ machine { rpc = rpc + 1, rtp = rtp - 1 }
           run
 
+        Instructions.WriteStr -> do
+          let baseAddress = smem ! (rtp - 1)
+          let length = dmem ! baseAddress
+          let contents = reverse $ getContents baseAddress length
+          tell $ [contents]
+          put $ machine { rpc = rpc + 1, rtp = rtp -1 }
+          run
+          where
+            getContents _ 0 = []
+            getContents address n =
+              let currentChar = chr . fromIntegral $ dmem ! (address - n)
+              in
+                currentChar : getContents address (n - 1)
+
         Instructions.Leave  -> do
           {-
             When we're leaving a procedure, we have to reset rbp to the
