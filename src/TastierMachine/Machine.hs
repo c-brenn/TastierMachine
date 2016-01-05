@@ -272,7 +272,7 @@ run = do
           let value = smem ! (rtp - 1)
           let address = smem ! (rtp - 2)
           put $ machine { rpc = rpc + 1,
-                          rtp = rtp - 1,
+                          rtp = rtp - 2,
                           dmem = (dmem // [(address, value)])
                         }
           run
