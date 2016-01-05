@@ -35,6 +35,7 @@ parseInstruction lineNumber text =
     ["Malloc"]      -> Right $ I.Nullary I.Malloc
     ["CalcAddress"] -> Right $ I.Nullary I.CalcAddress
     ["StoreTop"]    -> Right $ I.Nullary I.StoreTop
+    ["Pop"]         -> Right $ I.Nullary I.Pop
     ["LoadTop"]     -> Right $ I.Nullary I.LoadTop
     ["Load", a, b]  ->
       let a' = B.readInteger a

@@ -35,6 +35,7 @@ data Instruction = Add
                  | CalcAddress
                  | StoreTop
                  | LoadTop
+                 | Pop
                  deriving (Eq, Ord, Show, Enum)
 
 data InstructionWord = Nullary Instruction
